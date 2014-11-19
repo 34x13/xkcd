@@ -59,16 +59,19 @@ public class XKCDWindow : Gtk.Window {
 				var dis = new DataInputStream (web_page.read ());
 				string line;
 				while ((line = dis.read_line (null)) != null) {
-					//Very dirty code, you need a shower after that
+					//Very dirty code ahead, you need a shower after that
 					if(line.contains("id=\"comic\"")) {
 						if((line = dis.read_line (null)) != null) {
 							string[] elements = line.split("\"");
 							title = "xkcd - "+elements[5];
 							Gdk.Pixbuf pixbuf = pixbuf_from_web(elements[1]);
+							if(pixbuf==null) {
+								load(url);
+								return;
+							}
 							pixbuf.add_alpha(true,255,255,255);//white -> transparent
 							image.set_from_pixbuf(pixbuf);
-							image.set_tooltip_text(elements[3]);
-							icon = pixbuf;
+							update_decription(elements[3]);
 							this.resize(pixbuf.width,pixbuf.height);
 						}
 						break;
@@ -81,14 +84,31 @@ public class XKCDWindow : Gtk.Window {
 		show_all ();
 	}
 
-	private static Gdk.Pixbuf pixbuf_from_web(string uri) {
+	private void update_decription(string text) {
+		string escaped_text = text.replace("&#39;","'");
+		string[] words = escaped_text.split(" ");
+
+		string final_text = "";
+		int line_length = 0;
+		foreach(string word in words) {
+			if(line_length+word.length>40) {
+				final_text += "\n";
+				line_length = 0;
+			}
+			final_text += word+" ";
+			line_length += word.length;
+		}
+		image.set_tooltip_text(final_text);
+	}
+
+	private static Gdk.Pixbuf? pixbuf_from_web(string uri) {
 		File web_image = File.new_for_uri (uri);
 		if (web_image.query_exists ()) {
 		    try {
 				DataInputStream dis = new DataInputStream (web_image.read ());
 				return new Gdk.Pixbuf.from_stream(dis);
 			} catch (Error e) {
-				error ("%s", e.message);
+				return null;
 			}
 		}
 		return null;
