@@ -22,26 +22,33 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ***/
 
-public class XKCDWindow : Granite.Widgets.LightWindow {
+public class XKCDWindow : Gtk.Window {
 
 	Gtk.Image image;
 
 	public XKCDWindow(string url) {
-		title = "xkcd";
+		this.title = "xkcd";
+		this.border_width = 10;
+
+		var headerbar = new Gtk.HeaderBar();
+		headerbar.show_close_button = true;
+		this.set_titlebar(headerbar);
+
         Gtk.EventBox container = new Gtk.EventBox ();
-        add (container);
+        this.add (container);
         set_position(Gtk.WindowPosition.CENTER_ALWAYS);
 
-        image = new Gtk.Image ();
+        this.image = new Gtk.Image ();
         container.add(image);
 
-		load(url);
+		this.load(url);
 
-		destroy.connect (Gtk.main_quit);
 		container.button_press_event.connect((e) => {
 			load("http://c.xkcd.com/random/comic/");
 			return false;
 		});
+
+		this.destroy.connect(Gtk.main_quit);
 
 	}
 
@@ -62,6 +69,7 @@ public class XKCDWindow : Granite.Widgets.LightWindow {
 							image.set_from_pixbuf(pixbuf);
 							image.set_tooltip_text(elements[3]);
 							icon = pixbuf;
+							this.resize(pixbuf.width,pixbuf.height);
 						}
 						break;
 					}
