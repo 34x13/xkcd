@@ -25,17 +25,23 @@ SOFTWARE.
 public class XKCDWindow : Gtk.Window {
 
 	Gtk.Image image;
+	Gtk.HeaderBar headerbar;
+	Gtk.ScrolledWindow scrolled;
 
 	public XKCDWindow(string url) {
 		this.title = "xkcd";
-		this.border_width = 10;
+		//this.border_width = 10;
 
-		var headerbar = new Gtk.HeaderBar();
+		headerbar = new Gtk.HeaderBar();
 		headerbar.show_close_button = true;
+		headerbar.set_title("xkcd");
+		headerbar.set_subtitle("");
 		this.set_titlebar(headerbar);
 
         Gtk.EventBox container = new Gtk.EventBox ();
-        this.add (container);
+        scrolled = new Gtk.ScrolledWindow (null, null);
+		add (scrolled);
+        scrolled.add (container);
         set_position(Gtk.WindowPosition.CENTER_ALWAYS);
 
         this.image = new Gtk.Image ();
@@ -63,7 +69,8 @@ public class XKCDWindow : Gtk.Window {
 					if(line.contains("id=\"comic\"")) {
 						if((line = dis.read_line (null)) != null) {
 							string[] elements = line.split("\"");
-							title = "xkcd - "+elements[5];
+							//title = "xkcd - "+elements[5];
+							headerbar.set_subtitle(elements[5]);
 							Gdk.Pixbuf pixbuf = pixbuf_from_web(elements[1]);
 							if(pixbuf==null) {
 								load(url);
@@ -72,7 +79,15 @@ public class XKCDWindow : Gtk.Window {
 							pixbuf.add_alpha(true,255,255,255);//white -> transparent
 							image.set_from_pixbuf(pixbuf);
 							update_decription(elements[3]);
-							this.resize(pixbuf.width,pixbuf.height);
+							if(pixbuf.height<500) {
+								this.scrolled.min_content_height = pixbuf.height+10;
+								this.scrolled.min_content_width = pixbuf.width+10;
+								this.resize(pixbuf.width+10,pixbuf.height+10);
+							} else {
+								this.scrolled.min_content_height = 350;
+								this.scrolled.min_content_width = pixbuf.width+15;
+								this.resize(pixbuf.width+15,450);
+							}
 						}
 						break;
 					}
